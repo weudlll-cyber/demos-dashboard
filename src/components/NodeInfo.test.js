@@ -1,5 +1,28 @@
 /**
- * NodeInfo.test.js — Component tests for NodeInfo.svelte
+ * @file NodeInfo.test.js
+ * @project DEMOS Node Dashboard
+ * @repository https://github.com/weudlll-cyber/demos-dashboard
+ *
+ * @description
+ *   Component test suite for NodeInfo.svelte.
+ *   Renders the component in a happy-dom environment using
+ *   @testing-library/svelte and verifies the rendered DOM output.
+ *
+ * @coverage
+ *   - Renders the card title 'Node Info'
+ *   - Displays version, version name, and connection string
+ *   - Truncates long identity to 42 chars + ellipsis
+ *   - Does NOT truncate identity strings under 42 chars
+ *   - Shows '\u2014' for every missing / undefined field
+ *
+ * @props
+ *   data {object}  Full node response object passed as component prop.
+ *
+ * @testFramework  Vitest 1.x + @testing-library/svelte 4.x
+ * @environment    happy-dom
+ *
+ * @author  weudlll-cyber
+ * @license MIT
  */
 
 import { describe, it, expect } from 'vitest';

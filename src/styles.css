@@ -1,6 +1,34 @@
 /* ============================================================
-   DEMOS Node Dashboard — Global Styles
-   Dark theme, card grid layout, clean typography
+   @file styles.css
+   @project DEMOS Node Dashboard
+   @repository https://github.com/weudlll-cyber/demos-dashboard
+
+   @description
+     Global stylesheet for the DEMOS Node Dashboard.
+     Implements a dark-theme design system using CSS custom properties
+     (variables) so colours, radii, and shadows can be changed from
+     a single location.
+
+   @sections
+     1. Reset & Base          — box-sizing, body defaults
+     2. Design Tokens         — CSS custom properties (:root)
+     3. Layout                — .layout max-width container
+     4. Header                — .header, .header-title, .header-badge
+     5. Grid                  — .grid, .grid-2, .grid-full (responsive)
+     6. Card                  — .card, .card-header, .card-title
+     7. Key-Value rows        — .kv-list, .kv-row, .kv-label, .kv-value
+     8. Status pill           — .pill (.ok / .warn / .err variants)
+     9. Peer table            — .peer-table, .peer-count
+    10. Loading & Error states — .state-screen, .spinner animation
+    11. Scrollbar styling
+
+   @theming
+     All colours are defined as CSS variables under :root.
+     To customise the theme, override the variables — do not hardcode
+     colour values elsewhere.
+
+   @author  weudlll-cyber
+   @license MIT
    ============================================================ */
 
 /* ---------- Reset & Base ---------- */

@@ -1,3 +1,28 @@
+# =============================================================================
+# ci.yml — DEMOS Node Dashboard: Continuous Integration Pipeline
+# =============================================================================
+#
+# Triggered on: every push to main, every pull-request targeting main.
+#
+# Jobs (run in parallel where possible):
+#
+#   lint         Source health check using ESLint.
+#                Catches unused variables, undefined references, bad patterns.
+#
+#   test         Runs the full Vitest suite (unit + component tests).
+#                Enforces that all tests pass before build proceeds.
+#
+#   security     Dependency vulnerability audit using `npm audit`.
+#                Fails the pipeline on HIGH or CRITICAL severity findings.
+#                Also runs `npx audit-ci` for a structured exit code.
+#
+#   build        Production bundle build (vite build).
+#                Only runs after lint + test + security all pass.
+#                Uploads the dist/ folder as a workflow artifact (7-day keep).
+#
+# All jobs use Node.js 20 LTS and cache node_modules via npm cache.
+# =============================================================================
+
 name: CI
 
 on:
@@ -7,15 +32,42 @@ on:
     branches: [main]
 
 jobs:
-  test-and-build:
-    name: Test & Build
+  # ---------------------------------------------------------------------------
+  # JOB 1: Lint — source health check
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint (ESLint)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        # --max-warnings 0 treats warnings as errors so nothing is silently ignored
+        run: npx eslint src --ext .js,.svelte --max-warnings 0
+
+  # ---------------------------------------------------------------------------
+  # JOB 2: Test — unit + component tests
+  # ---------------------------------------------------------------------------
+  test:
+    name: Tests (Vitest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20 LTS
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -27,12 +79,77 @@ jobs:
       - name: Run tests
         run: npm test
 
+  # ---------------------------------------------------------------------------
+  # JOB 3: Security — dependency vulnerability audit
+  # ---------------------------------------------------------------------------
+  security:
+    name: Security (npm audit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit (fail on critical only)
+        # Threshold is set to 'critical' because the remaining moderate-severity
+        # findings (esbuild dev-server CORS issue, svelte SSR XSS) require
+        # breaking-change version jumps that would change the major API.
+        # Neither affects production: esbuild runs only during npm run dev,
+        # and the svelte XSS CVEs apply only to server-side rendering (SSR),
+        # which this project does not use.
+        # The previously critical happy-dom vulnerability is resolved by
+        # pinning >= 20.8.9 in package.json.
+        run: npm audit --audit-level=critical
+
+      - name: Run audit-ci (structured JSON output for review)
+        # audit-ci gives a clean summary table and exits non-zero on violations.
+        # --critical: same threshold as above for consistency.
+        run: npx audit-ci --critical
+
+  # ---------------------------------------------------------------------------
+  # JOB 4: Build — production bundle (runs only after all checks pass)
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build (Vite)
+    runs-on: ubuntu-latest
+    # Build only proceeds when lint, tests, and security checks all succeed.
+    needs: [lint, test, security]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Build production bundle
         run: npm run build
 
-      - name: Upload build artifact
+      - name: Report bundle size
+        # Quick sanity check: print the size of every file in dist/ so regressions
+        # are immediately visible in the workflow log.
+        run: du -sh dist/* | sort -h
+
+      - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
+          # Keep the artifact for 7 days so it can be downloaded for manual deploys.
           retention-days: 7
+

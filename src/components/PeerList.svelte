@@ -1,6 +1,31 @@
+<!--
+  @file PeerList.svelte
+  @project DEMOS Node Dashboard
+  @repository https://github.com/weudlll-cyber/demos-dashboard
+
+  @description
+    Renders a full-width scrollable table listing every peer returned by the
+    DEMOS node API. Each row shows all available status fields for that peer.
+
+    Identity values are shortened with shortId() for display; the complete
+    identity is accessible as an HTML title tooltip.
+
+    The table wrapper has overflow-x:auto so the layout stays intact on
+    narrow screens without horizontal page overflow.
+
+  @props
+    peers {Array}  The peerlist array from the node response.
+                  Defaults to [] so the empty-state message renders safely
+                  before any data arrives.
+
+  @author  weudlll-cyber
+  @license MIT
+-->
 <script>
   export let peers = [];
 
+  // Shortens a peer identity hex string to 'first10…10…last6' for table display.
+  // Full value is kept in the HTML title attribute for hover/copy access.
   function shortId(id) {
     if (!id) return '—';
     // Show first 10 and last 6 chars for readability

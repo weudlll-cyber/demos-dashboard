@@ -1,3 +1,28 @@
+<!--
+  @file App.svelte
+  @project DEMOS Node Dashboard
+  @repository https://github.com/weudlll-cyber/demos-dashboard
+
+  @description
+    Root application component. Manages the data lifecycle:
+      - Fetches node data immediately on mount.
+      - Starts a polling interval (POLL_INTERVAL_MS) to refresh data live.
+      - Cleans up the interval on component destroy (avoids memory leaks).
+      - Passes slices of the response down to child components as props.
+
+  @children
+    NodeInfo    <-- version, identity, connection string
+    SyncStatus  <-- block height/hash, online/ready/verified for first peer
+    PeerList    <-- full peer table for all peers
+
+  @states
+    Loading:    data === null && error === false  (initial fetch in flight)
+    Error:      data === null && error === true   (API unreachable)
+    Live:       data !== null                    (data displayed, updating)
+
+  @author  weudlll-cyber
+  @license MIT
+-->
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { fetchNodeData } from './api.js';

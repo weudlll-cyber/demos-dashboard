@@ -1,3 +1,25 @@
+<!--
+  @file SyncStatus.svelte
+  @project DEMOS Node Dashboard
+  @repository https://github.com/weudlll-cyber/demos-dashboard
+
+  @description
+    Displays the synchronisation state of the first peer in the peerlist.
+    Svelte reactive declarations ($:) keep all derived booleans in sync
+    whenever the `peer` prop changes (i.e. on every poll cycle).
+
+    Status pills use three visual states:
+      ok   (green) — condition is true and healthy
+      warn (amber) — condition is false but not critical (e.g. not ready yet)
+      err  (red)   — condition indicates a real problem (e.g. offline, out of sync)
+
+  @props
+    peer {object|undefined}  First element of peerlist from the node response.
+                             Treated as optional; renders placeholder if undefined.
+
+  @author  weudlll-cyber
+  @license MIT
+-->
 <script>
   // peer is the first entry from peerlist, or undefined
   export let peer = undefined;

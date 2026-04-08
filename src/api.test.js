@@ -1,5 +1,32 @@
 /**
- * api.test.js — Unit tests for fetchNodeData()
+ * @file api.test.js
+ * @project DEMOS Node Dashboard
+ * @repository https://github.com/weudlll-cyber/demos-dashboard
+ *
+ * @description
+ *   Unit test suite for src/api.js.
+ *   Tests the fetchNodeData() function under all realistic conditions:
+ *   successful responses, HTTP error codes, network failures, and timeouts.
+ *
+ *   All tests run in a happy-dom environment (no real browser or network).
+ *   The global `fetch` is replaced with a vi.fn() mock in each test to keep
+ *   tests isolated and deterministic.
+ *
+ * @coverage
+ *   - Happy path: 200 OK with valid JSON body
+ *   - HTTP 4xx: 404 Not Found
+ *   - HTTP 5xx: 500 Internal Server Error
+ *   - Network error (fetch rejects with Error)
+ *   - Timeout (fetch rejects with DOMException 'TimeoutError')
+ *   - AbortError edge case
+ *   - Empty peerlist (valid response, zero peers)
+ *   - Correct URL and Accept header
+ *
+ * @testFramework Vitest 1.x
+ * @environment   happy-dom (see vite.config.js)
+ *
+ * @author  weudlll-cyber
+ * @license MIT
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
