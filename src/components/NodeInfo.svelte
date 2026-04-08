@@ -18,6 +18,8 @@
   @license MIT
 -->
 <script>
+  import Tooltip from './Tooltip.svelte';
+
   export let data;
 
   // Limits long hex strings (e.g. identity) to `len` chars + ellipsis.
@@ -30,24 +32,39 @@
 
 <div class="card">
   <div class="card-header">
-    <span class="card-title">Node Info</span>
+    <div class="card-header-left">
+      <span class="card-title">Node Info</span>
+      <Tooltip text="Basic information about this DEMOS node — its software version and the address other nodes use to connect to it." />
+    </div>
   </div>
 
   <dl class="kv-list">
     <div class="kv-row">
-      <dt class="kv-label">Version</dt>
+      <dt class="kv-label">
+        Version
+        <Tooltip text="The software version number of the DEMOS node (e.g. 0.9.8). Newer versions may include bug fixes and new features." />
+      </dt>
       <dd class="kv-value plain">{data.version ?? '—'}</dd>
     </div>
     <div class="kv-row">
-      <dt class="kv-label">Version Name</dt>
+      <dt class="kv-label">
+        Version Name
+        <Tooltip text="The human-readable codename for this software release (e.g. 'Oxlong Michael'). Different versions of the node software use different codenames." />
+      </dt>
       <dd class="kv-value plain">{data.version_name ?? '—'}</dd>
     </div>
     <div class="kv-row">
-      <dt class="kv-label">Connection</dt>
+      <dt class="kv-label">
+        Connection
+        <Tooltip text="The network address and port that other DEMOS nodes use to connect to this node. You can share this address with others to let them peer with you." />
+      </dt>
       <dd class="kv-value">{data.connectionString ?? '—'}</dd>
     </div>
     <div class="kv-row">
-      <dt class="kv-label">Identity</dt>
+      <dt class="kv-label">
+        Identity
+        <Tooltip text="A unique cryptographic fingerprint that permanently identifies this node on the network — like a passport number. Hover over the value to see the full ID." />
+      </dt>
       <dd class="kv-value" title={data.identity}>{truncate(data.identity, 42)}</dd>
     </div>
   </dl>

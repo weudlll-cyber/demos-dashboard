@@ -22,6 +22,8 @@
   @license MIT
 -->
 <script>
+  import Tooltip from './Tooltip.svelte';
+
   export let peers = [];
 
   // Shortens a peer identity hex string to 'first10…10…last6' for table display.
@@ -35,8 +37,14 @@
 
 <div class="card">
   <div class="card-header">
-    <span class="card-title">Peer List</span>
-    <span class="peer-count">{peers?.length ?? 0} peer{(peers?.length ?? 0) !== 1 ? 's' : ''}</span>
+    <div class="card-header-left">
+      <span class="card-title">Peer List</span>
+      <Tooltip text="Other DEMOS nodes that this node is currently connected to. More peers means better network participation and more reliable data." />
+    </div>
+    <span
+      class="peer-count"
+      title="Number of other DEMOS nodes currently connected to this node"
+    >{peers?.length ?? 0} peer{(peers?.length ?? 0) !== 1 ? 's' : ''}</span>
   </div>
 
   {#if !peers || peers.length === 0}
@@ -47,13 +55,13 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>Identity</th>
-            <th>Connection</th>
-            <th>Online</th>
-            <th>Ready</th>
-            <th>Synced</th>
-            <th>Block</th>
-            <th>Verified</th>
+            <th><span class="th-inner">Identity <Tooltip text="The unique cryptographic ID of this peer node. Each node has a different one. Hover the value in the row to see the full ID." /></span></th>
+            <th><span class="th-inner">Connection <Tooltip text="The network address (IP and port) used to reach this peer." /></span></th>
+            <th><span class="th-inner">Online <Tooltip text="Whether this peer is currently reachable on the network." /></span></th>
+            <th><span class="th-inner">Ready <Tooltip text="Whether this peer has finished starting up and is ready to process blocks." /></span></th>
+            <th><span class="th-inner">Synced <Tooltip text="Whether this peer's blockchain is up to date with the rest of the network." /></span></th>
+            <th><span class="th-inner">Block <Tooltip text="The latest block number this peer has processed. Should match the block height shown in Sync Status when fully synced." /></span></th>
+            <th><span class="th-inner">Verified <Tooltip text="Whether this peer's blockchain data has passed cryptographic verification checks." /></span></th>
           </tr>
         </thead>
         <tbody>

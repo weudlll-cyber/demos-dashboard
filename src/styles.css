@@ -195,6 +195,9 @@ html, body {
 }
 
 .kv-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.8rem;
   color: var(--text-muted);
   min-width: 130px;
@@ -332,3 +335,94 @@ html, body {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-body); }
 ::-webkit-scrollbar-thumb { background: var(--border-accent); border-radius: 3px; }
+
+/* ---------- Tooltip ---------- */
+.tooltip-wrap {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* The circular '?' button */
+.tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: 0.6rem;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  font-style: normal;
+  line-height: 1;
+  cursor: help;
+  user-select: none;
+  outline: none;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tooltip-icon:hover,
+.tooltip-icon:focus {
+  background: var(--accent);
+  color: var(--bg-body);
+  box-shadow: 0 0 0 2px rgba(108, 140, 255, 0.3);
+}
+
+/*
+ * Tooltip popup.
+ * position:fixed + JS-computed coordinates so it escapes any overflow:auto
+ * container (e.g. the scrollable peer table on narrow screens).
+ * transform: translateX(-50%) centers it horizontally on the anchor icon.
+ * transform: translateY(-100%) flips it to appear ABOVE the anchor.
+ */
+.tooltip-box {
+  position: fixed;
+  z-index: 9999;
+  transform: translateX(-50%) translateY(-100%);
+  max-width: 230px;
+  width: max-content;
+  padding: 9px 13px;
+  background: var(--bg-card-hover);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: normal;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+/* Downward arrow connecting the tooltip box to the icon */
+.tooltip-arrow {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+  border-top-color: var(--border-accent);
+}
+
+/* ---- Card header left group (title + tooltip icon) ---- */
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---- Inline table header with tooltip ---- */
+.th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

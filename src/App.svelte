@@ -68,7 +68,7 @@
   <header class="header">
     <div class="header-title">
       <h1>DEMOS Node</h1>
-      <span class="header-badge">Live</span>
+      <span class="header-badge" title="Data refreshes automatically every 3 seconds">Live</span>
     </div>
     <div class="header-meta">
       {#if lastUpdated}
