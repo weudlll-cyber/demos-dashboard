@@ -4,23 +4,28 @@
 #
 # Triggered on: every push to main, every pull-request targeting main.
 #
-# Jobs (run in parallel where possible):
+# Jobs (run in parallel where lint/test/security/secrets allow):
 #
-#   lint         Source health check using ESLint.
-#                Catches unused variables, undefined references, bad patterns.
+#   secrets      Scans every commit for accidentally committed secrets,
+#                API keys, tokens, or credentials using gitleaks.
+#
+#   lint         Source health check (ESLint incl. security plugin).
+#                Catches unused vars, undefined refs, eval(), ReDoS, etc.
 #
 #   test         Runs the full Vitest suite (unit + component tests).
-#                Enforces that all tests pass before build proceeds.
 #
-#   security     Dependency vulnerability audit using `npm audit`.
-#                Fails the pipeline on HIGH or CRITICAL severity findings.
-#                Also runs `npx audit-ci` for a structured exit code.
+#   security     npm audit --audit-level=high + audit-ci with allowlist.
+#                Fails on any NEW high or critical dependency vuln.
+#                Known accepted moderate dev-only issues documented in
+#                audit-ci.json and SECURITY.md.
 #
-#   build        Production bundle build (vite build).
-#                Only runs after lint + test + security all pass.
-#                Uploads the dist/ folder as a workflow artifact (7-day keep).
+#   build        Production bundle (vite build).
+#                Only runs after ALL four checks above pass.
+#                Uploads dist/ artifact (7-day retention).
 #
-# All jobs use Node.js 20 LTS and cache node_modules via npm cache.
+# Permissions:
+#   Workflow-level: read-all (minimal by default, principle of least privilege).
+#   Per-job overrides grant only what each job actually needs.
 # =============================================================================
 
 name: CI
@@ -31,13 +36,44 @@ on:
   pull_request:
     branches: [main]
 
+# Restrict all jobs to read-only by default.
+# Individual jobs override only what they need.
+permissions:
+  contents: read
+
 jobs:
   # ---------------------------------------------------------------------------
-  # JOB 1: Lint — source health check
+  # JOB 1: Secrets scanning — detect credentials in git history
+  # ---------------------------------------------------------------------------
+  secrets:
+    name: Secrets Scan (gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository (full history for secret scanning)
+        uses: actions/checkout@v4
+        with:
+          # Fetch full git history so gitleaks can scan all commits,
+          # not just the latest one.
+          fetch-depth: 0
+
+      - name: Scan for secrets with gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          # GITHUB_TOKEN is required by the action to post PR annotations.
+          # 'contents: read' is sufficient — we don't write to the repo.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------------------------------------------------------------------------
+  # JOB 2: Lint — ESLint with security plugin
   # ---------------------------------------------------------------------------
   lint:
-    name: Lint (ESLint)
+    name: Lint (ESLint + security plugin)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -52,16 +88,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run ESLint
-        # --max-warnings 0 treats warnings as errors so nothing is silently ignored
+      - name: Run ESLint (includes eslint-plugin-security)
+        # --max-warnings 0: any warning is treated as an error.
+        # Covers: undefined vars, eval(), ReDoS, prototype injection, etc.
         run: npx eslint src --ext .js,.svelte --max-warnings 0
 
   # ---------------------------------------------------------------------------
-  # JOB 2: Test — unit + component tests
+  # JOB 3: Test — unit + component tests
   # ---------------------------------------------------------------------------
   test:
     name: Tests (Vitest)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -80,11 +119,13 @@ jobs:
         run: npm test
 
   # ---------------------------------------------------------------------------
-  # JOB 3: Security — dependency vulnerability audit
+  # JOB 4: Security — dependency vulnerability audit
   # ---------------------------------------------------------------------------
   security:
-    name: Security (npm audit)
+    name: Security (npm audit + audit-ci)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -99,30 +140,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run npm audit (fail on critical only)
-        # Threshold is set to 'critical' because the remaining moderate-severity
-        # findings (esbuild dev-server CORS issue, svelte SSR XSS) require
-        # breaking-change version jumps that would change the major API.
-        # Neither affects production: esbuild runs only during npm run dev,
-        # and the svelte XSS CVEs apply only to server-side rendering (SSR),
-        # which this project does not use.
-        # The previously critical happy-dom vulnerability is resolved by
-        # pinning >= 20.8.9 in package.json.
-        run: npm audit --audit-level=critical
+      - name: Run npm audit (fail on HIGH or CRITICAL)
+        # Previously set to --critical because of the now-fixed happy-dom
+        # critical CVE (GHSA-96g7). Back to --high now that no criticals remain.
+        # Any new HIGH or CRITICAL vuln will break this step immediately.
+        run: npm audit --audit-level=high
 
-      - name: Run audit-ci (structured JSON output for review)
-        # audit-ci gives a clean summary table and exits non-zero on violations.
-        # --critical: same threshold as above for consistency.
-        run: npx audit-ci --critical
+      - name: Run audit-ci (with documented allowlist)
+        # audit-ci reads audit-ci.json which explicitly allowlists the known
+        # MODERATE dev-only findings (esbuild dev server, Svelte SSR) with
+        # full justification in SECURITY.md.
+        # Any finding NOT in the allowlist at HIGH or CRITICAL will fail.
+        run: npx audit-ci --config audit-ci.json
 
   # ---------------------------------------------------------------------------
-  # JOB 4: Build — production bundle (runs only after all checks pass)
+  # JOB 5: Build — production bundle (runs only after ALL checks pass)
   # ---------------------------------------------------------------------------
   build:
     name: Build (Vite)
     runs-on: ubuntu-latest
-    # Build only proceeds when lint, tests, and security checks all succeed.
-    needs: [lint, test, security]
+    permissions:
+      contents: read
+    # Gate: all four checks must pass before we produce a build artifact.
+    needs: [secrets, lint, test, security]
 
     steps:
       - name: Checkout repository
@@ -140,16 +180,16 @@ jobs:
       - name: Build production bundle
         run: npm run build
 
-      - name: Report bundle size
-        # Quick sanity check: print the size of every file in dist/ so regressions
-        # are immediately visible in the workflow log.
-        run: du -sh dist/* | sort -h
+      - name: Report bundle sizes
+        # Prints every file in dist/ sorted by size.
+        # Makes bundle regressions visible immediately in the workflow log.
+        run: du -sh dist/* dist/assets/* 2>/dev/null | sort -h || true
 
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
-          # Keep the artifact for 7 days so it can be downloaded for manual deploys.
+          # 7-day retention: long enough for a manual deploy after a release.
           retention-days: 7
 

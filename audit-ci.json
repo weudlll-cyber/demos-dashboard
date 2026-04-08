@@ -1,0 +1,18 @@
+{
+  "$schema": "https://github.com/IBM/audit-ci/blob/main/docs/schema.json",
+
+  "comment": "audit-ci configuration for DEMOS Node Dashboard",
+
+  "high": true,
+
+  "allowlist": [
+    "GHSA-67mh-4wv8-2f99",
+    "GHSA-crpf-4hrx-3jrp",
+    "GHSA-m56q-vw4c-c2cp",
+    "GHSA-f7gr-6p89-r883",
+    "GHSA-phwv-c562-gvmh",
+    "GHSA-4w7w-66w2-5vf9"
+  ],
+
+  "report-type": "full"
+}
