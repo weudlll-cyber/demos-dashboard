@@ -110,20 +110,72 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ---
 
-## 7. Enable HTTPS with Let's Encrypt (Recommended)
+## 7. Enable HTTPS with Let's Encrypt
+
+HTTPS encrypts all traffic between the browser and the server. Without it, API responses and the dashboard itself travel in cleartext.
+
+### 7.1 Prerequisites
+
+Before running certbot:
+- Your **domain's DNS A record** must point to this server's IP.
+- Port 80 must be reachable from the internet (nginx must be running).
+
+### 7.2 Install certbot and obtain the certificate
 
 ```bash
-# Install certbot
 sudo apt-get install -y certbot python3-certbot-nginx
 
-# Get a certificate (replaces HTTP with HTTPS automatically)
+# Replace your-domain.com with your actual domain.
+# certbot will edit the nginx config, obtain the certificate, and reload nginx.
 sudo certbot --nginx -d your-domain.com
+```
 
-# Certbot sets up auto-renewal. Test the renewal process:
+Certbot will:
+1. Obtain a certificate from Let's Encrypt.
+2. Add `ssl_certificate`, `ssl_certificate_key`, and SSL settings to the nginx HTTP block.
+3. Reload nginx.
+
+### 7.3 Activate the HTTPS redirect and HTTPS server block
+
+Once the certificate is in place and you can confirm `https://your-domain.com` loads:
+
+1. Open the nginx config:
+   ```bash
+   sudo nano /etc/nginx/sites-available/demos-dashboard
+   ```
+
+2. In the `server` block (port 80), **uncomment** the redirect line:
+   ```nginx
+   return 301 https://$host$request_uri;
+   ```
+   Then comment out or remove the `root`, `location /api`, `location /`, and all `add_header` lines — they are unreachable once the redirect is active. Keep the `location /.well-known/acme-challenge/` block; it must remain reachable on port 80 for certbot renewal.
+
+3. **Uncomment the entire HTTPS `server { }` block** at the bottom of the file. Replace `your-domain.com` with your actual domain.
+
+4. Test and reload:
+   ```bash
+   sudo nginx -t && sudo systemctl reload nginx
+   ```
+
+5. Verify HTTPS in your browser. Then enable HSTS inside the HTTPS block by uncommenting:
+   ```nginx
+   add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+   ```
+   Start with a short `max-age` (e.g. `300`) during testing; increase to `31536000` (1 year) once stable.
+
+### 7.4 Auto-renewal
+
+Certbot installs a systemd timer that renews certificates automatically. Test the renewal process:
+
+```bash
 sudo certbot renew --dry-run
 ```
 
-After this, the dashboard is available at `https://your-domain.com`.
+If the dry-run passes, renewal is configured correctly. Certificates renew automatically every ~60 days before expiry.
+
+### 7.5 Verify HTTPS headers
+
+After HTTPS is active, test your security headers at **https://securityheaders.com**. You should see an A or A+ rating.
 
 ---
 
