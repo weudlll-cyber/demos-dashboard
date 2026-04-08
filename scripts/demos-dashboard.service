@@ -1,0 +1,63 @@
+# demos-dashboard.service — Systemd unit for DEMOS Dashboard (vite preview)
+# ============================================================
+# ALTERNATIVE deployment: run "vite preview" as a background service
+# instead of serving static files via nginx.
+#
+# Use this approach if you prefer a simpler setup without nginx.
+# For production, the nginx + static files approach (install.sh) is recommended.
+#
+# HOW TO INSTALL:
+#   1. Build the project first:
+#        cd /opt/demos-dashboard && npm run build
+#
+#   2. Copy this file to systemd:
+#        sudo cp scripts/demos-dashboard.service /etc/systemd/system/
+#
+#   3. Reload systemd, enable and start:
+#        sudo systemctl daemon-reload
+#        sudo systemctl enable demos-dashboard
+#        sudo systemctl start demos-dashboard
+#
+#   4. Check status:
+#        sudo systemctl status demos-dashboard
+#        sudo journalctl -u demos-dashboard -f
+#
+# HOW TO UPDATE:
+#   After rebuilding (npm run build):
+#        sudo systemctl restart demos-dashboard
+#
+# The service will listen on port 4173 by default.
+# To expose it on port 80, either:
+#   - Change --port 4173 to --port 80 (requires running as root or CAP_NET_BIND_SERVICE)
+#   - Keep port 4173 and put nginx in front as a reverse proxy
+# ============================================================
+
+[Unit]
+Description=DEMOS Node Dashboard (vite preview)
+Documentation=https://github.com/your-username/demos-dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/demos-dashboard
+
+# Adjust path to npm if using nvm: /home/USER/.nvm/versions/node/vX.Y.Z/bin/npm
+ExecStart=/usr/bin/npm run preview -- --host 0.0.0.0 --port 4173
+
+Restart=on-failure
+RestartSec=5s
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/demos-dashboard
+
+# Environment
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
