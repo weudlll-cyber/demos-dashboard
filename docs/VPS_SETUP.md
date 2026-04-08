@@ -45,7 +45,7 @@ npm -v    # should print 10.x.x or higher
 ```bash
 sudo mkdir -p /opt
 cd /opt
-sudo git clone https://github.com/your-username/demos-dashboard.git
+sudo git clone https://github.com/weudlll-cyber/demos-dashboard.git
 sudo chown -R $USER:$USER /opt/demos-dashboard
 cd /opt/demos-dashboard
 ```

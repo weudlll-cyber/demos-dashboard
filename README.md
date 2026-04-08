@@ -2,10 +2,8 @@
 
 A real-time monitoring dashboard for a DEMOS blockchain node, built with **Svelte 4** and **Vite**.
 
-[![CI](https://github.com/your-username/demos-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/demos-dashboard/actions/workflows/ci.yml)
+[![CI](https://github.com/weudlll-cyber/demos-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/weudlll-cyber/demos-dashboard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
-> **Replace `your-username`** in the badge URLs above and in the install instructions with your actual GitHub username once the repo is created.
 
 ---
 
@@ -33,7 +31,7 @@ A real-time monitoring dashboard for a DEMOS blockchain node, built with **Svelt
 ## Quick Start (local development)
 
 ```bash
-git clone https://github.com/your-username/demos-dashboard.git
+git clone https://github.com/weudlll-cyber/demos-dashboard.git
 cd demos-dashboard
 npm install
 npm run dev

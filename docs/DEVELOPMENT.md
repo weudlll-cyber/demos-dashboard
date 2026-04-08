@@ -16,7 +16,7 @@ Everything you need to work on DEMOS Dashboard locally.
 ## Setup
 
 ```bash
-git clone https://github.com/your-username/demos-dashboard.git
+git clone https://github.com/weudlll-cyber/demos-dashboard.git
 cd demos-dashboard
 npm install
 ```

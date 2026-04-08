@@ -34,7 +34,7 @@
 
 [Unit]
 Description=DEMOS Node Dashboard (vite preview)
-Documentation=https://github.com/your-username/demos-dashboard
+Documentation=https://github.com/weudlll-cyber/demos-dashboard
 After=network-online.target
 Wants=network-online.target
 
