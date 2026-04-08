@@ -65,19 +65,19 @@ npm run preview   # serve the production build locally at http://localhost:4173
 
 ## VPS Deployment
 
-See **[docs/VPS_SETUP.md](docs/VPS_SETUP.md)** for the full step-by-step guide.
+See **[docs/VPS_SETUP.md](docs/VPS_SETUP.md)** for the full guide.
 
-**Quick path** — once the repo is cloned on your VPS:
+**Three commands** — once the repo is cloned on your VPS:
 
 ```bash
-# First-time install
+# First-time install — interactive, handles Node.js / nginx / build / deploy / HTTPS
 bash scripts/install.sh
 
-# After any update
+# After any code update
 bash scripts/update.sh
 ```
 
-The installer handles Node.js, nginx, building, and deploying automatically.
+The installer asks for your domain and email, then takes care of **everything** — including a free HTTPS certificate from Let's Encrypt if you want one.
 
 ---
 

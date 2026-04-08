@@ -1,6 +1,39 @@
 # VPS Setup Guide
 
-Step-by-step instructions for deploying the DEMOS Node Dashboard on a Linux VPS.
+Step-by-step guide for deploying the DEMOS Node Dashboard on a Linux VPS.
+
+---
+
+## Quick Start — From zero to running in ~5 minutes
+
+This is everything you need. Run these commands on your VPS (Ubuntu 22.04/24.04):
+
+```bash
+# 1. Install base tools
+sudo apt-get update && sudo apt-get install -y git curl rsync
+
+# 2. Clone the repository
+cd /opt && sudo git clone https://github.com/weudlll-cyber/demos-dashboard.git
+sudo chown -R $USER:$USER /opt/demos-dashboard
+cd /opt/demos-dashboard
+
+# 3. Run the interactive installer
+#    It will ask for your domain name and email, then handle everything:
+#    Node.js, nginx, building, deploying, and optionally HTTPS.
+bash scripts/install.sh
+```
+
+The installer prints your live URL at the end.
+
+**To update the dashboard** after any code change:
+```bash
+cd /opt/demos-dashboard && bash scripts/update.sh
+```
+
+---
+
+> **The sections below explain what the installer does and how to do each
+> step manually if needed.** If the Quick Start above worked, you are done.
 
 ---
 
@@ -58,15 +91,22 @@ cd /opt/demos-dashboard
 bash scripts/install.sh
 ```
 
-**What the installer does automatically:**
-1. Checks for / installs Node.js 20 LTS
-2. Checks for / installs nginx
-3. Runs `npm install` and `npm run build`
-4. Copies `dist/` to `/var/www/demos-dashboard/`
-5. Installs the nginx config to `/etc/nginx/sites-available/demos-dashboard`
-6. Enables the site and reloads nginx
+The installer is **interactive** — it will ask you two questions:
 
-After it finishes, your dashboard is live at `http://YOUR-SERVER-IP`.
+| Question | What to enter |
+|----------|--------------|
+| Domain name | Your domain (e.g. `demo.example.com`), or press ENTER to skip (IP-only access) |
+| Email for HTTPS | Your email address for Let's Encrypt alerts, or press ENTER to skip HTTPS |
+
+If you provide both a domain and an email, the installer **automatically**:
+1. Installs Node.js 20 LTS (if not present) and nginx (if not present)
+2. Builds the dashboard (`npm install` + `npm run build`)
+3. Deploys `dist/` to `/var/www/demos-dashboard/` with secure permissions
+4. Installs and configures nginx with your domain
+5. Runs certbot to obtain a free HTTPS certificate from Let's Encrypt
+6. Adds the hardened HTTPS server block and enables the HTTP→HTTPS redirect
+
+The final line it prints is your live URL.
 
 ---
 
@@ -89,20 +129,15 @@ Open `http://YOUR-SERVER-IP` in a browser. You should see the dashboard. If the 
 
 ## 6. Configure a Domain (Optional)
 
-Once your domain's DNS A record points to the server's IP:
+> **If you ran the installer and provided a domain, this is already done.**
+
+If you want to add or change the domain later:
 
 ```bash
-# Edit the nginx config
 sudo nano /etc/nginx/sites-available/demos-dashboard
 ```
 
-Change the `server_name` line to:
-
-```nginx
-server_name your-domain.com www.your-domain.com;
-```
-
-Then reload nginx:
+Change the `server_name` line to your domain, then reload:
 
 ```bash
 sudo nginx -t && sudo systemctl reload nginx
@@ -112,70 +147,56 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ## 7. Enable HTTPS with Let's Encrypt
 
-HTTPS encrypts all traffic between the browser and the server. Without it, API responses and the dashboard itself travel in cleartext.
+> **If you ran the installer and provided an email, this is already done.**
 
-### 7.1 Prerequisites
+HTTPS encrypts all traffic between the browser and the server. Without it, API responses travel in cleartext.
 
-Before running certbot:
-- Your **domain's DNS A record** must point to this server's IP.
-- Port 80 must be reachable from the internet (nginx must be running).
+### Prerequisites
 
-### 7.2 Install certbot and obtain the certificate
+- Your domain's **DNS A record must point to this server's IP**.
+- Port 80 must be reachable (nginx must be running).
+- Verify DNS: `dig +short your-domain.com` — should return this server's IP.
+
+### Option A — Automatic (recommended)
+
+Re-run the installer and provide your domain and email when asked. It handles everything.
 
 ```bash
-sudo apt-get install -y certbot python3-certbot-nginx
-
-# Replace your-domain.com with your actual domain.
-# certbot will edit the nginx config, obtain the certificate, and reload nginx.
-sudo certbot --nginx -d your-domain.com
+bash scripts/install.sh
 ```
 
-Certbot will:
-1. Obtain a certificate from Let's Encrypt.
-2. Add `ssl_certificate`, `ssl_certificate_key`, and SSL settings to the nginx HTTP block.
-3. Reload nginx.
+### Option B — Manual (if you already have a domain configured)
 
-### 7.3 Activate the HTTPS redirect and HTTPS server block
+```bash
+# Step 1: Obtain the certificate (does NOT touch nginx)
+sudo apt-get install -y certbot
+sudo certbot certonly --webroot -w /var/www/html \
+     -d your-domain.com --email your@email.com --agree-tos
 
-Once the certificate is in place and you can confirm `https://your-domain.com` loads:
+# Step 2: Activate the HTTPS server block and redirect
+bash scripts/https-activate.sh your-domain.com
+```
 
-1. Open the nginx config:
-   ```bash
-   sudo nano /etc/nginx/sites-available/demos-dashboard
-   ```
+`https-activate.sh` appends the hardened HTTPS server block, enables the HTTP→HTTPS redirect, and reloads nginx — no manual file editing needed.
 
-2. In the `server` block (port 80), **uncomment** the redirect line:
-   ```nginx
-   return 301 https://$host$request_uri;
-   ```
-   Then comment out or remove the `root`, `location /api`, `location /`, and all `add_header` lines — they are unreachable once the redirect is active. Keep the `location /.well-known/acme-challenge/` block; it must remain reachable on port 80 for certbot renewal.
+### After HTTPS is working
 
-3. **Uncomment the entire HTTPS `server { }` block** at the bottom of the file. Replace `your-domain.com` with your actual domain.
+Once you confirm `https://your-domain.com` loads correctly, increase the HSTS duration from 5 minutes to 1 year:
 
-4. Test and reload:
-   ```bash
-   sudo nginx -t && sudo systemctl reload nginx
-   ```
+```bash
+sudo sed -i 's/max-age=300/max-age=31536000/' /etc/nginx/sites-available/demos-dashboard
+sudo nginx -t && sudo systemctl reload nginx
+```
 
-5. Verify HTTPS in your browser. Then enable HSTS inside the HTTPS block by uncommenting:
-   ```nginx
-   add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-   ```
-   Start with a short `max-age` (e.g. `300`) during testing; increase to `31536000` (1 year) once stable.
+Then verify your headers score an A or A+ at **https://securityheaders.com**.
 
-### 7.4 Auto-renewal
+### Auto-renewal
 
-Certbot installs a systemd timer that renews certificates automatically. Test the renewal process:
+Certbot installs a systemd timer that renews certificates automatically every ~60 days. Test it at any time:
 
 ```bash
 sudo certbot renew --dry-run
 ```
-
-If the dry-run passes, renewal is configured correctly. Certificates renew automatically every ~60 days before expiry.
-
-### 7.5 Verify HTTPS headers
-
-After HTTPS is active, test your security headers at **https://securityheaders.com**. You should see an A or A+ rating.
 
 ---
 
