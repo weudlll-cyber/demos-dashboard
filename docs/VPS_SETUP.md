@@ -6,24 +6,26 @@ Step-by-step guide for deploying the DEMOS Node Dashboard on a Linux VPS.
 
 ## Quick Start — From zero to running in ~5 minutes
 
-This is everything you need. Run these commands on your VPS (Ubuntu 22.04/24.04):
+Paste these 3 commands on your VPS. The installer then guides you through everything with on-screen instructions — no other documentation needed.
 
 ```bash
-# 1. Install base tools
+# 1. Install base tools (takes ~30 seconds)
 sudo apt-get update && sudo apt-get install -y git curl rsync
 
 # 2. Clone the repository
 cd /opt && sudo git clone https://github.com/weudlll-cyber/demos-dashboard.git
-sudo chown -R $USER:$USER /opt/demos-dashboard
-cd /opt/demos-dashboard
+sudo chown -R $USER:$USER /opt/demos-dashboard && cd /opt/demos-dashboard
 
-# 3. Run the interactive installer
-#    It will ask for your domain name and email, then handle everything:
-#    Node.js, nginx, building, deploying, and optionally HTTPS.
+# 3. Run the guided installer — it will walk you through everything
 bash scripts/install.sh
 ```
 
-The installer prints your live URL at the end.
+The installer will:
+- Show your server's IP address (needed for DNS setup)
+- Ask for your domain name and explain exactly what DNS record to add and where
+- Ask for your email and set up a free HTTPS certificate automatically
+- Set up the firewall, auto-security-updates, nginx, and the dashboard
+- Print your live URL at the end
 
 **To update the dashboard** after any code change:
 ```bash
@@ -32,11 +34,10 @@ cd /opt/demos-dashboard && bash scripts/update.sh
 
 ---
 
-> **The sections below explain what the installer does and how to do each
-> step manually if needed.** If the Quick Start above worked, you are done.
+> **The sections below explain each step in detail and cover manual/advanced setups.**
+> If the Quick Start above worked, you are done.
 
 ---
-
 ## Assumptions
 
 - **OS:** Ubuntu 22.04 or 24.04 LTS (other Debian-based distros work too)
