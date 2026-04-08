@@ -73,7 +73,10 @@ ok "Build complete — output in dist/"
 echo ""
 info "Deploying files to $WEB_ROOT..."
 sudo rsync -a --delete "$PROJECT_DIR/dist/" "$WEB_ROOT/"
-ok "Files deployed"
+sudo chown -R www-data:www-data "$WEB_ROOT"
+sudo find "$WEB_ROOT" -type d -exec chmod 755 {} \;
+sudo find "$WEB_ROOT" -type f -exec chmod 644 {} \;
+ok "Files deployed with hardened permissions"
 
 # --- 5. Reload nginx ---------------------------------------------------------
 echo ""

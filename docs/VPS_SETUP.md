@@ -138,6 +138,116 @@ sudo ufw status
 
 ---
 
+## 9. SSH Hardening
+
+Reducing the SSH attack surface is one of the most impactful things you can do on a public VPS.
+
+### 9.1 Key-based authentication only
+
+On your **local machine**, generate an SSH key if you don't already have one:
+
+```bash
+ssh-keygen -t ed25519 -C "your-email@example.com"
+```
+
+Copy your public key to the server:
+
+```bash
+ssh-copy-id your-user@your-vps-ip
+```
+
+Then on the **VPS**, lock down the SSH daemon:
+
+```bash
+sudo nano /etc/ssh/sshd_config
+```
+
+Set or confirm these values:
+
+```
+# Disable root login completely
+PermitRootLogin no
+
+# Require SSH key — password logins are forbidden
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+
+# Only allow your specific user (optional but recommended)
+AllowUsers your-user
+```
+
+Reload SSH (do NOT close your existing session first — open a second terminal to verify
+the new key login works before reloading, to avoid locking yourself out):
+
+```bash
+sudo sshd -t          # syntax check — must return no errors
+sudo systemctl reload sshd
+```
+
+### 9.2 Install and configure fail2ban
+
+fail2ban watches log files and automatically bans IPs that show brute-force patterns.
+
+```bash
+sudo apt install -y fail2ban
+```
+
+Create a local override file (never edit the default `jail.conf` — it gets overwritten on upgrades):
+
+```bash
+sudo nano /etc/fail2ban/jail.local
+```
+
+Paste the following:
+
+```ini
+[DEFAULT]
+# Ban IPs for 1 hour after 5 failures within a 10-minute window
+bantime  = 3600
+findtime = 600
+maxretry = 5
+
+# Send ban notifications to the local syslog
+destemail = root@localhost
+action = %(action_mw)s
+
+[sshd]
+enabled  = true
+port     = ssh
+logpath  = %(sshd_log)s
+backend  = %(sshd_backend)s
+
+[nginx-http-auth]
+enabled  = true
+
+[nginx-limit-req]
+# Catches IPs that repeatedly hit the nginx rate-limit (429 responses)
+enabled  = true
+filter   = nginx-limit-req
+logpath  = /var/log/nginx/error.log
+maxretry = 10
+```
+
+Enable and start fail2ban:
+
+```bash
+sudo systemctl enable --now fail2ban
+sudo fail2ban-client status          # verify both jails are active
+sudo fail2ban-client status sshd     # check the SSH jail specifically
+```
+
+### 9.3 Verify your hardening (quick checklist)
+
+| Check | Command |
+|-------|---------|
+| Root login disabled | `sudo sshd -T \| grep permitrootlogin` → must say `no` |
+| Password auth off | `sudo sshd -T \| grep passwordauthentication` → must say `no` |
+| fail2ban SSH jail active | `sudo fail2ban-client status sshd` |
+| fail2ban nginx jail active | `sudo fail2ban-client status nginx-limit-req` |
+| UFW status | `sudo ufw status verbose` |
+
+---
+
 ## Updating the Dashboard
 
 After you push new changes to GitHub, pull and redeploy on the VPS with a single command:

@@ -82,9 +82,19 @@ echo ""
 info "Deploying files to $WEB_ROOT..."
 sudo mkdir -p "$WEB_ROOT"
 
-# rsync: copy everything from dist/ into WEB_ROOT and remove files no longer in dist/
+# rsync: copy everything from dist/ into WEB_ROOT and remove stale files.
 sudo rsync -a --delete "$PROJECT_DIR/dist/" "$WEB_ROOT/"
-ok "Files deployed"
+
+# Harden web root permissions:
+#   - Owned by www-data (the nginx worker user) so nginx can read the files.
+#   - Directories: 755 (owner rwx, group+others r-x) — nginx can traverse them.
+#   - Files:       644 (owner rw, group+others r) — readable, not executable.
+#   - No world-writable files. If a file were world-writable an attacker who
+#     can write to the filesystem could replace served JS/CSS with malware.
+sudo chown -R www-data:www-data "$WEB_ROOT"
+sudo find "$WEB_ROOT" -type d -exec chmod 755 {} \;
+sudo find "$WEB_ROOT" -type f -exec chmod 644 {} \;
+ok "Files deployed with hardened permissions (www-data:www-data, 644/755)"
 
 # --- 5. Nginx config ---------------------------------------------------------
 echo ""
