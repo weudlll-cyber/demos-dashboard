@@ -14,6 +14,11 @@ updates:
       timezone: Europe/Berlin
     # Maximum number of open pull requests for npm updates
     open-pull-requests-limit: 5
+    # Ignore major version bumps — they require manual migration (e.g. Svelte 4→5, ESLint 9→10)
+    # and would fail CI with breaking changes. Review major upgrades manually.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     # Group all non-breaking updates into a single PR to reduce noise
     groups:
       dev-dependencies:
