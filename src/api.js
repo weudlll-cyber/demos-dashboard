@@ -10,7 +10,7 @@
  *   callers (App.svelte) never need to deal with raw exceptions.
  *
  * @api
- *   GET /api  →  { version, version_name, identity, connectionString, peerlist[] }
+ *   GET /info  →  { version, version_name, identity, connectionString, peerlist[] }
  *
  * @exports
  *   fetchNodeData(): Promise<object|null>
@@ -24,9 +24,9 @@
  * @license MIT
  */
 
-// Development proxy maps this path to http://localhost:53550/api (see vite.config.js).
+// Development proxy maps this path to http://localhost:53550/info (see vite.config.js).
 // In production the nginx reverse-proxy or the node must be on the same origin.
-const NODE_API_URL = '/api';
+const NODE_API_URL = '/info';
 
 /**
  * Fetches the current node data from the DEMOS node REST API.

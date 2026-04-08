@@ -95,7 +95,7 @@ describe('fetchNodeData', () => {
     await fetchNodeData();
 
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      '/api',
+      '/info',
       expect.objectContaining({ method: 'GET' })
     );
   });
@@ -106,7 +106,7 @@ describe('fetchNodeData', () => {
     await fetchNodeData();
 
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      '/api',
+      '/info',
       expect.objectContaining({
         headers: expect.objectContaining({ Accept: 'application/json' }),
       })
