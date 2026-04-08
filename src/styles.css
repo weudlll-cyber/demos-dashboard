@@ -146,9 +146,50 @@ html, body {
   grid-column: 1 / -1;
 }
 
+/* Tablet (≤ 768 px) */
 @media (max-width: 768px) {
   .grid-2 {
     grid-template-columns: 1fr;
+  }
+  .layout {
+    padding: 20px 16px 40px;
+  }
+}
+
+/* Mobile (≤ 480 px — phones) */
+@media (max-width: 480px) {
+  html, body {
+    font-size: 14px;
+  }
+  .layout {
+    padding: 14px 12px 28px;
+  }
+  /* Stack header title and "last updated" text vertically */
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 18px;
+  }
+  .card {
+    padding: 14px 14px;
+  }
+  /* Stack label above value so long hashes get the full card width */
+  .kv-row {
+    flex-direction: column;
+    gap: 3px;
+  }
+  .kv-label {
+    min-width: unset;
+    padding-top: 0;
+  }
+  /* Hide low-priority peer table columns — keeps the table readable */
+  .hide-mobile {
+    display: none;
+  }
+  /* Keep tooltip box inside the viewport on narrow screens */
+  .tooltip-box {
+    max-width: min(220px, calc(100vw - 24px));
   }
 }
 

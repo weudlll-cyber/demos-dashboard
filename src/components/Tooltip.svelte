@@ -30,6 +30,11 @@
     // Center horizontally on the icon; position above it with an 8px gap.
     tx = Math.round(r.left + r.width / 2);
     ty = Math.round(r.top - 8);
+    // Clamp so the tooltip box never overflows the viewport edges on mobile.
+    // half = half of max-width (230px), margin = minimum gap from viewport edge.
+    const half = 115;
+    const margin = 8;
+    tx = Math.max(half + margin, Math.min(tx, window.innerWidth - half - margin));
     show = true;
   }
 

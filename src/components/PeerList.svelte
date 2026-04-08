@@ -54,22 +54,22 @@
       <table class="peer-table">
         <thead>
           <tr>
-            <th>#</th>
+            <th class="hide-mobile">#</th>
             <th><span class="th-inner">Identity <Tooltip text="The unique cryptographic ID of this peer node. Each node has a different one. Hover the value in the row to see the full ID." /></span></th>
-            <th><span class="th-inner">Connection <Tooltip text="The network address (IP and port) used to reach this peer." /></span></th>
+            <th class="hide-mobile"><span class="th-inner">Connection <Tooltip text="The network address (IP and port) used to reach this peer." /></span></th>
             <th><span class="th-inner">Online <Tooltip text="Whether this peer is currently reachable on the network." /></span></th>
             <th><span class="th-inner">Ready <Tooltip text="Whether this peer has finished starting up and is ready to process blocks." /></span></th>
             <th><span class="th-inner">Synced <Tooltip text="Whether this peer's blockchain is up to date with the rest of the network." /></span></th>
             <th><span class="th-inner">Block <Tooltip text="The latest block number this peer has processed. Should match the block height shown in Sync Status when fully synced." /></span></th>
-            <th><span class="th-inner">Verified <Tooltip text="Whether this peer's blockchain data has passed cryptographic verification checks." /></span></th>
+            <th class="hide-mobile"><span class="th-inner">Verified <Tooltip text="Whether this peer's blockchain data has passed cryptographic verification checks." /></span></th>
           </tr>
         </thead>
         <tbody>
           {#each peers as peer, i}
             <tr>
-              <td>{i + 1}</td>
+              <td class="hide-mobile">{i + 1}</td>
               <td class="mono" title={peer.identity}>{shortId(peer.identity)}</td>
-              <td class="mono">{peer.connection?.string ?? '—'}</td>
+              <td class="mono hide-mobile">{peer.connection?.string ?? '—'}</td>
               <td>
                 <span class="pill {peer.status?.online ? 'ok' : 'err'}">
                   {peer.status?.online ? 'Yes' : 'No'}
@@ -86,7 +86,7 @@
                 </span>
               </td>
               <td>{peer.sync?.block?.toLocaleString() ?? '—'}</td>
-              <td>
+              <td class="hide-mobile">
                 <span class="pill {peer.verification?.status ? 'ok' : 'warn'}">
                   {peer.verification?.status ? 'Yes' : 'No'}
                 </span>
